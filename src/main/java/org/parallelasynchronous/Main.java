@@ -1,18 +1,46 @@
 package org.parallelasynchronous;
 
+import java.awt.desktop.SystemEventListener;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 import static java.lang.Thread.sleep;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        create2().thenApply(data -> data*2)
+                .exceptionally(Main::handleException)
+                .thenAccept(System.out::println);
+    }
 
-        List<Integer> list = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-        list.parallelStream()
-                .map(Main::transform)
-                .forEachOrdered(e -> printIt(e));
+    public static int handleException(Throwable throwable) {
+        System.out.println("Error:  " + throwable);
+        throw new RuntimeException("It is beyond all hope");
+    }
+
+    public static void waysToGetFuture(CompletableFuture<Integer> future) {
+        create2().thenApply(data -> data * 2)
+                .thenAccept(System.out::println);
+    }
+
+    public static CompletableFuture<Integer> create2() {
+        return CompletableFuture.supplyAsync(() -> compute());
+    }
+
+    public static int compute() {
+        throw new RuntimeException("Something wrong");
+    }
+
+    public static CompletableFuture<Integer> create() {
+        try {
+            sleep(2000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return CompletableFuture.supplyAsync(() -> 2);
     }
 
     public static void printIt(int num) {
